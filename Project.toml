@@ -1,0 +1,8 @@
+name = "OptionalArgChecks"
+uuid = "2e738587-3ec2-4317-bbf7-f267dd7803ac"
+authors = ["Simeon Schaub <simeondavidschaub99@gmail.com>"]
+version = "0.1.0"
+
+[deps]
+IRTools = "7869d1d1-7146-5819-86e3-90919afe41df"
+MacroTools = "1914dd2f-81c6-5fcd-8719-6d5c9610ff09"
