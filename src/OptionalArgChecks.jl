@@ -5,6 +5,30 @@ using MacroTools: postwalk
 
 export @argcheck, @skipargcheck
 
+"""
+    @argcheck ex
+
+Marks `ex` as an optional argument check, so when a function is called via
+[`@skipargcheck`](@ref), `ex` will be omitted.
+
+```jldoctest
+julia> function half(x::Integer)
+           @argcheck iseven(x) || throw(DomainError(x, "x has to be an even number"))
+           return x ÷ 2
+       end
+half (generic function with 1 method)
+
+julia> half(4)
+2
+
+julia> half(3)
+ERROR: DomainError with 3:
+x has to be an even number
+
+julia> @skipargcheck half(3)
+1
+```
+"""
 macro argcheck(ex)
     return Expr(:block, Expr(:meta, :begin_argcheck), esc(ex), Expr(:meta, :end_argcheck))
 end
@@ -38,6 +62,12 @@ end
     return ir
 end
 
+"""
+    @skipargcheck ex
+
+For every function call in `ex`, expressions wrapped in [`@argcheck`](@ref) get omitted
+recursively.
+"""
 macro skipargcheck(ex)
     ex = postwalk(ex) do x
         if Meta.isexpr(x, :call)
