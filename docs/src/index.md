@@ -4,7 +4,7 @@ CurrentModule = OptionalArgChecks
 
 # OptionalArgChecks
 
-Test
+This is a Test
 
 ```@index
 ```
