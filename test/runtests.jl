@@ -15,5 +15,5 @@ for x in 0:2
 end
 
 using Documenter
-
+DocMeta.setdocmeta!(OptionalArgChecks, :DocTestSetup, :(using OptionalArgChecks); recursive=true)
 doctest(OptionalArgChecks; manual = false)

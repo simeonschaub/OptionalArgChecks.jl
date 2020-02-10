@@ -1,6 +1,8 @@
 using OptionalArgChecks
 using Documenter
 
+DocMeta.setdocmeta!(OptionalArgChecks, :DocTestSetup, :(using OptionalArgChecks); recursive=true)
+
 makedocs(;
     modules=[OptionalArgChecks],
     authors="Simeon Schaub",
