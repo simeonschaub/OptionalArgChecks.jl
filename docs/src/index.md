@@ -1,5 +1,6 @@
 ```@meta
 CurrentModule = OptionalArgChecks
+DocTestSetup = :(using OptionalArgChecks)
 ```
 
 # OptionalArgChecks
