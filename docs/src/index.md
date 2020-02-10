@@ -4,6 +4,8 @@ CurrentModule = OptionalArgChecks
 
 # OptionalArgChecks
 
+Test
+
 ```@index
 ```
 
