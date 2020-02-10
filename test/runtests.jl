@@ -13,3 +13,7 @@ end
 for x in 0:2
     @test @skipargcheck f(x) == x + 3
 end
+
+using Documenter
+
+doctest(OptionalArgChecks; manual = false)

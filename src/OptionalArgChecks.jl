@@ -11,6 +11,9 @@ export @argcheck, @skipargcheck
 Marks `ex` as an optional argument check, so when a function is called via
 [`@skipargcheck`](@ref), `ex` will be omitted.
 
+```@meta
+DocTestSetup = :(using OptionalArgChecks)
+```
 ```jldoctest
 julia> function half(x::Integer)
            @argcheck iseven(x) || throw(DomainError(x, "x has to be an even number"))
@@ -24,6 +27,7 @@ julia> half(4)
 julia> half(3)
 ERROR: DomainError with 3:
 x has to be an even number
+[...]
 
 julia> @skipargcheck half(3)
 1
