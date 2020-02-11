@@ -2,7 +2,7 @@ using Test
 using OptionalArgChecks
 
 function f(x)
-    @argcheck x<2 && if x == 1
+    @mark argcheck x<2 && if x == 1
         return "foo"
     else
         error("Test")
