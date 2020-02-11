@@ -3,17 +3,17 @@ module OptionalArgChecks
 using IRTools: @dynamo, IR, recurse!, block, branches, branch!
 using MacroTools: postwalk
 
-export @mark, @elide#, @skipargcheck
+export @mark, @elide, @skipargcheck
 
 """
-    @argcheck ex
+    @mark label ex
 
 Marks `ex` as an optional argument check, so when a function is called via
 [`@skipargcheck`](@ref), `ex` will be omitted.
 
 ```jldoctest
 julia> function half(x::Integer)
-           @argcheck iseven(x) || throw(DomainError(x, "x has to be an even number"))
+           @mark argcheck iseven(x) || throw(DomainError(x, "x has to be an even number"))
            return x ÷ 2
        end
 half (generic function with 1 method)
