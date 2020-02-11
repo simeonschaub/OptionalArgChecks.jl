@@ -3,7 +3,7 @@ module OptionalArgChecks
 using IRTools: @dynamo, IR, recurse!, block, branches, branch!
 using MacroTools: postwalk
 
-export @argcheck, @skipargcheck
+export @mark, @elide#, @skipargcheck
 
 """
     @argcheck ex
@@ -30,22 +30,38 @@ julia> @skipargcheck half(3)
 1
 ```
 """
-macro argcheck(ex)
-    return Expr(:block, Expr(:meta, :begin_argcheck), esc(ex), Expr(:meta, :end_argcheck))
+macro mark(label, ex)
+    label isa Symbol || error("label has to be a Symbol")
+    return Expr(
+        :block,
+        Expr(:meta, :begin_optional, label),
+        esc(ex),
+        Expr(:meta, :end_optional, label),
+    )
 end
 
-@dynamo function skipargcheck(x...)
+struct ElideCheck{label}
+    ElideCheck(label::Symbol) = new{label}()
+end
+
+@dynamo function (::ElideCheck{label})(x...) where {label}
     ir = IR(x...)
     ir === nothing && return
     next = iterate(ir)
     while next !== nothing
         (x, st), state = next
-        if Meta.isexpr(st.expr, :meta) && st.expr.args[1] === :begin_argcheck
+        if Meta.isexpr(st.expr, :meta) &&
+            st.expr.args[1] === :begin_optional &&
+            st.expr.args[2] === label
+
             orig = block(ir, x)
             delete!(ir, x)
             
             (x, st), state = iterate(ir, state)
-            while !(Meta.isexpr(st.expr, :meta) && st.expr.args[1] === :end_argcheck)
+            while !(Meta.isexpr(st.expr, :meta) &&
+                st.expr.args[1] === :end_optional &&
+                st.expr.args[2] === label)
+
                 delete!(ir, x)
                 (x, st), state = iterate(ir, state)
             end
@@ -63,6 +79,17 @@ end
     return ir
 end
 
+macro elide(label, ex)
+    label isa Symbol || error("label has to be a Symbol")
+    ex = postwalk(ex) do x
+        if Meta.isexpr(x, :call)
+            pushfirst!(x.args, Expr(:call, GlobalRef(@__MODULE__, :ElideCheck), Expr(:quote, label)))
+        end
+        return x
+    end
+    return esc(ex)
+end
+
 """
     @skipargcheck ex
 
@@ -70,13 +97,7 @@ For every function call in `ex`, expressions wrapped in [`@argcheck`](@ref) get 
 recursively.
 """
 macro skipargcheck(ex)
-    ex = postwalk(ex) do x
-        if Meta.isexpr(x, :call)
-            pushfirst!(x.args, GlobalRef(@__MODULE__, :skipargcheck))
-        end
-        return x
-    end
-    return esc(ex)
+    return :(@elide argcheck $(esc(ex)))
 end
 
 end
