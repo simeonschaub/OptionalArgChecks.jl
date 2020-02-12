@@ -82,7 +82,7 @@ end
     end
 
     @test nested() == 1:4
-    @test_broken nested() == [4]
+    @test_broken @elide(nested, nested()) == [4]
 end
 
 using Documenter

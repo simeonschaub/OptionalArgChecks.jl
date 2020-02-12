@@ -60,7 +60,7 @@ end
 
             orig = block(ir, x)
             delete!(ir, x)
-            
+
             (x, st), state = iterate(ir, state)
             while !(Meta.isexpr(st.expr, :meta) &&
                 st.expr.args[1] === :end_optional &&
@@ -69,7 +69,7 @@ end
                 delete!(ir, x)
                 (x, st), state = iterate(ir, state)
             end
-            
+
             dest = block(ir, x)
             if orig != dest
                 empty!(branches(orig))
