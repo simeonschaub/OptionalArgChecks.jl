@@ -13,11 +13,11 @@ export @argcheck, @check
     @mark label ex
 
 Marks `ex` as an optional argument check, so when a function is called via
-[`@skipargcheck`](@ref), `ex` will be omitted.
+[`@elide`](@ref) with label `label`, `ex` will be omitted.
 
 ```jldoctest
 julia> function half(x::Integer)
-           @mark argcheck iseven(x) || throw(DomainError(x, "x has to be an even number"))
+           @mark check_even iseven(x) || throw(DomainError(x, "x has to be an even number"))
            return x ÷ 2
        end
 half (generic function with 1 method)
@@ -30,7 +30,7 @@ ERROR: DomainError with 3:
 x has to be an even number
 [...]
 
-julia> @skipargcheck half(3)
+julia> @elide check_even half(3)
 1
 ```
 """
@@ -83,6 +83,12 @@ end
     return ir
 end
 
+"""
+    @elide label ex
+
+For every function call in `ex`, expressions marked with label `label` using the macro
+[`@mark`](@ref) get omitted recursively.
+"""
 macro elide(label, ex)
     label isa Symbol || error("label has to be a Symbol")
     ex = postwalk(ex) do x
@@ -101,8 +107,8 @@ end
 """
     @skipargcheck ex
 
-For every function call in `ex`, expressions wrapped in [`@argcheck`](@ref) get omitted
-recursively.
+Elides argument checks created with [`@argcheck`](@ref) or [`@check`](@ref), provided by the
+package `ArgCheck.jl`. Is equivalent to `@elide argcheck ex`.
 """
 macro skipargcheck(ex)
     return :(@elide argcheck $(esc(ex)))
