@@ -88,4 +88,3 @@ end
 using Documenter
 DocMeta.setdocmeta!(OptionalArgChecks, :DocTestSetup, :(using OptionalArgChecks); recursive=true)
 doctest(OptionalArgChecks; manual = false)
-
