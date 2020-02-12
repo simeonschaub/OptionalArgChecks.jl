@@ -5,6 +5,10 @@ using MacroTools: postwalk
 
 export @mark, @elide, @skipargcheck
 
+# reexport @argcheck and @check
+using ArgCheck: @argcheck, @check
+export @argcheck, @check
+
 """
     @mark label ex
 
@@ -83,7 +87,11 @@ macro elide(label, ex)
     label isa Symbol || error("label has to be a Symbol")
     ex = postwalk(ex) do x
         if Meta.isexpr(x, :call)
-            pushfirst!(x.args, Expr(:call, GlobalRef(@__MODULE__, :ElideCheck), Expr(:quote, label)))
+            pushfirst!(x.args, Expr(
+                :call,
+                GlobalRef(@__MODULE__, :ElideCheck),
+                Expr(:quote, label)
+            ))
         end
         return x
     end
