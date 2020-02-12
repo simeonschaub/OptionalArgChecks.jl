@@ -20,4 +20,5 @@ makedocs(;
 
 deploydocs(;
     repo="github.com/simeonschaub/OptionalArgChecks.jl",
+    push_preview = true,
 )
