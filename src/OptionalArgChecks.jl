@@ -51,34 +51,39 @@ end
 @dynamo function (::ElideCheck{label})(x...) where {label}
     ir = IR(x...)
     ir === nothing && return
-    next = iterate(ir)
-    while next !== nothing
-        (x, st), state = next
-        if Meta.isexpr(st.expr, :meta) &&
+    depth = 0
+    local orig
+    for (x, st) in ir
+        @assert depth >= 0
+        is_layer_begin = Meta.isexpr(st.expr, :meta) &&
             st.expr.args[1] === :begin_optional &&
             st.expr.args[2] === label
+        is_layer_end =  Meta.isexpr(st.expr, :meta) &&
+            st.expr.args[1] === :end_optional &&
+            st.expr.args[2] === label
 
+        if is_layer_begin
+            depth += 1
+        elseif is_layer_end
+            depth -= 1
+        end
+
+        is_begin = is_layer_begin && depth == 1
+        is_end   = is_layer_end   && depth == 0
+        if is_begin
             orig = block(ir, x)
-            delete!(ir, x)
-
-            (x, st), state = iterate(ir, state)
-            while !(Meta.isexpr(st.expr, :meta) &&
-                st.expr.args[1] === :end_optional &&
-                st.expr.args[2] === label)
-
-                delete!(ir, x)
-                (x, st), state = iterate(ir, state)
-            end
-
+        elseif is_end
             dest = block(ir, x)
             if orig != dest
                 empty!(branches(orig))
                 branch!(orig, dest)
             end
+        end
+        if is_layer_begin || is_layer_end || depth > 0
             delete!(ir, x)
         end
-        next = iterate(ir, state)
     end
+    @assert depth == 0
     recurse!(ir)
     return ir
 end
