@@ -30,7 +30,7 @@ using OptionalArgChecks
     @test g(1) === nothing
 end
 
-@testset "mark elide" begin
+@testset "mark skip" begin
     function simple()
         @mark return1 begin
             return 1
