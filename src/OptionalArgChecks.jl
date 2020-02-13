@@ -44,11 +44,11 @@ macro mark(label, ex)
     )
 end
 
-struct ElideCheck{labels}
-    ElideCheck(labels::Symbol...) = new{labels}()
+struct Skip{labels}
+    Skip(labels::Symbol...) = new{labels}()
 end
 
-@dynamo function (::ElideCheck{labels})(x...) where {labels}
+@dynamo function (::Skip{labels})(x...) where {labels}
     ir = IR(x...)
     ir === nothing && return
 
@@ -105,7 +105,7 @@ macro skip(label, ex)
         if Meta.isexpr(x, :call)
             pushfirst!(x.args, Expr(
                 :call,
-                GlobalRef(@__MODULE__, :ElideCheck),
+                GlobalRef(@__MODULE__, :Skip),
                 Expr(:quote, label)
             ))
         end
