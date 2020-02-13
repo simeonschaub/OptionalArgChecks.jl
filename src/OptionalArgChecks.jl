@@ -44,32 +44,34 @@ macro mark(label, ex)
     )
 end
 
-struct ElideCheck{label}
-    ElideCheck(label::Symbol) = new{label}()
+struct ElideCheck{labels}
+    ElideCheck(labels::Symbol...) = new{labels}()
 end
 
-@dynamo function (::ElideCheck{label})(x...) where {label}
+@dynamo function (::ElideCheck{labels})(x...) where {labels}
     ir = IR(x...)
     ir === nothing && return
-    depth = 0
+
+    tape = ()
     local orig
+
     for (x, st) in ir
-        @assert depth >= 0
         is_layer_begin = Meta.isexpr(st.expr, :meta) &&
             st.expr.args[1] === :begin_optional &&
-            st.expr.args[2] === label
+            st.expr.args[2] in labels
         is_layer_end =  Meta.isexpr(st.expr, :meta) &&
             st.expr.args[1] === :end_optional &&
-            st.expr.args[2] === label
+            !isempty(tape) && st.expr.args[2] === last(tape)
 
         if is_layer_begin
-            depth += 1
+            tape = (tape..., st.expr.args[2])
         elseif is_layer_end
-            depth -= 1
+            tape = Base.front(tape)
         end
 
-        is_begin = is_layer_begin && depth == 1
-        is_end   = is_layer_end   && depth == 0
+        is_begin = is_layer_begin && length(tape) == 1
+        is_end   = is_layer_end   && isempty(tape)
+
         if is_begin
             orig = block(ir, x)
         elseif is_end
@@ -79,11 +81,14 @@ end
                 branch!(orig, dest)
             end
         end
-        if is_layer_begin || is_layer_end || depth > 0
+
+        if is_layer_begin || is_layer_end || !isempty(tape)
             delete!(ir, x)
         end
     end
-    @assert depth == 0
+
+    @assert isempty(tape)
+
     recurse!(ir)
     return ir
 end
