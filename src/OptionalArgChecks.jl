@@ -3,7 +3,7 @@ module OptionalArgChecks
 using IRTools: @dynamo, IR, recurse!, block, branches, branch!
 using MacroTools: postwalk
 
-export @mark, @elide, @skipargcheck
+export @mark, @skip, @skipargcheck
 
 # reexport @argcheck and @check
 using ArgCheck: @argcheck, @check
@@ -13,7 +13,7 @@ export @argcheck, @check
     @mark label ex
 
 Marks `ex` as an optional argument check, so when a function is called via
-[`@elide`](@ref) with label `label`, `ex` will be omitted.
+[`@skip`](@ref) with label `label`, `ex` will be omitted.
 
 ```jldoctest
 julia> function half(x::Integer)
@@ -30,7 +30,7 @@ ERROR: DomainError with 3:
 x has to be an even number
 [...]
 
-julia> @elide check_even half(3)
+julia> @skip check_even half(3)
 1
 ```
 """
@@ -89,12 +89,12 @@ end
 end
 
 """
-    @elide label ex
+    @skip label ex
 
 For every function call in `ex`, expressions marked with label `label` using the macro
 [`@mark`](@ref) get omitted recursively.
 """
-macro elide(label, ex)
+macro skip(label, ex)
     label isa Symbol || error("label has to be a Symbol")
     ex = postwalk(ex) do x
         if Meta.isexpr(x, :call)
@@ -113,10 +113,10 @@ end
     @skipargcheck ex
 
 Elides argument checks created with [`@argcheck`](@ref) or [`@check`](@ref), provided by the
-package `ArgCheck.jl`. Is equivalent to `@elide argcheck ex`.
+package `ArgCheck.jl`. Is equivalent to `@skip argcheck ex`.
 """
 macro skipargcheck(ex)
-    return :(@elide argcheck $(esc(ex)))
+    return :(@skip argcheck $(esc(ex)))
 end
 
 end

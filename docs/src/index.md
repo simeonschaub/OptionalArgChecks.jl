@@ -4,7 +4,7 @@ CurrentModule = OptionalArgChecks
 
 # OptionalArgChecks
 
-Provides two macros, [`@mark`](@ref) and [`@elide`](@ref) which give users control over
+Provides two macros, [`@mark`](@ref) and [`@skip`](@ref) which give users control over
 skipping arbitrary code in functions for better performance.
 
 For convenience, this package also exports [`@argcheck`](https://github.com/jw3126/ArgCheck.jl)

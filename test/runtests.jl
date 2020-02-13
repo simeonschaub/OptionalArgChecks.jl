@@ -19,14 +19,14 @@ using OptionalArgChecks
 
     @test_throws ArgumentError g(-1)
     @test @skipargcheck(g(-1)) === nothing
-    @test @elide(argcheck, g(-1)) === nothing
+    @test @skip(argcheck, g(-1)) === nothing
     @test g(1) === nothing
 
     g(x) = @check x > 0
 
     @test_throws Exception g(-1)
     @test @skipargcheck(g(-1)) === nothing
-    @test @elide(argcheck, g(-1)) === nothing
+    @test @skip(argcheck, g(-1)) === nothing
     @test g(1) === nothing
 end
 
@@ -39,16 +39,16 @@ end
     end
 
     @test simple() === 1
-    @test @elide(does_not_exist, simple()) === 1
-    @test @elide(return1, simple()) === 2
+    @test @skip(does_not_exist, simple()) === 1
+    @test @skip(return1, simple()) === 2
 
     function indirect()
         simple()
     end
 
     @test indirect() === 1
-    @test @elide(does_not_exist, indirect()) === 1
-    @test @elide(return1, indirect()) === 2
+    @test @skip(does_not_exist, indirect()) === 1
+    @test @skip(return1, indirect()) === 2
 
     function complex()
         ret = Int[]
@@ -64,9 +64,9 @@ end
     end
 
     @test complex() == 1:4
-    @test @elide(does_not_exist, complex()) == 1:4
-    @test @elide(two, complex()) == [1,3,4]
-    @test @elide(four, complex()) == [1,2,3]
+    @test @skip(does_not_exist, complex()) == 1:4
+    @test @skip(two, complex()) == [1,3,4]
+    @test @skip(four, complex()) == [1,2,3]
 
     function nested()
         ret = Int[]
@@ -82,7 +82,7 @@ end
     end
 
     @test nested() == 1:4
-    @test @elide(nested, nested()) == [4]
+    @test @skip(nested, nested()) == [4]
 end
 
 using Documenter
