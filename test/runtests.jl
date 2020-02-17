@@ -1,6 +1,5 @@
 using Test
 using OptionalArgChecks
-using OptionalArgChecks: Skip
 
 @testset "argcheck" begin
     function f(x)
@@ -68,7 +67,7 @@ end
     @test @skip(does_not_exist, complex()) == 1:4
     @test @skip(two, complex()) == [1,3,4]
     @test @skip(four, complex()) == [1,2,3]
-    @test Skip(:two, :four)(complex) == [1,3]
+    @test @skip([two, four], complex()) == [1,3]
 
     function nested()
         ret = Int[]
@@ -111,13 +110,13 @@ end
         ret
     end
 
-    @test Skip()(complex_nested) == 'a':'h'
-    @test Skip(:bcdg)(complex_nested) == collect("aefh")
-    @test Skip(:cdh)(complex_nested) == collect("abefg")
-    @test Skip(:fgh)(complex_nested) == 'a':'e'
-    @test Skip(:bcdg, :cdh)(complex_nested) == collect("aef")
-    @test Skip(:fgh, :cdh)(complex_nested) == collect("abe")
-    @test Skip(:bcdg, :cdh, :fgh)(complex_nested) == collect("ae")
+    @test @skip([], complex_nested()) == 'a':'h'
+    @test @skip([bcdg], complex_nested()) == collect("aefh")
+    @test @skip([cdh], complex_nested()) == collect("abefg")
+    @test @skip([fgh], complex_nested()) == 'a':'e'
+    @test @skip([bcdg, cdh], complex_nested()) == collect("aef")
+    @test @skip([fgh, cdh], complex_nested()) == collect("abe")
+    @test @skip([bcdg, cdh, fgh], complex_nested()) == collect("ae")
 end
 
 using Documenter

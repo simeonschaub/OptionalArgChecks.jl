@@ -95,18 +95,26 @@ end
 
 """
     @skip label ex
+    @skip [label1, label2, ...] ex
 
-For every function call in `ex`, expressions marked with label `label` using the macro
-[`@mark`](@ref) get omitted recursively.
+For every function call in `ex`, expressions marked with label `label` (or any of the labels
+`label*` respectively) using the macro [`@mark`](@ref) get omitted recursively.
 """
-macro skip(label, ex)
-    label isa Symbol || error("label has to be a Symbol")
+macro skip(l, ex)
+    if l isa Symbol
+        labels = [l]
+    elseif Meta.isexpr(l, :vect)
+        labels::Vector{Symbol} = l.args
+    else
+        error("label has to be a name or array of names")
+    end
+
     ex = postwalk(ex) do x
         if Meta.isexpr(x, :call)
             pushfirst!(x.args, Expr(
                 :call,
                 GlobalRef(@__MODULE__, :Skip),
-                Expr(:quote, label)
+                Expr.(:quote, labels)...
             ))
         end
         return x
