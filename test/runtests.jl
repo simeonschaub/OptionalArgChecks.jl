@@ -121,6 +121,37 @@ end
     @test @skip([bcdg, cdh, fgh], complex_nested()) == collect("ae")
 end
 
+@testset "recursion through function calls" begin
+    function inner()
+        ret = Int[]
+        push!(ret, 2)
+        @mark three begin
+            push!(ret, 3)
+        end
+        ret
+    end
+
+    function outer()
+        ret = Int[]
+        push!(ret, 1)
+        x = inner()
+        append!(ret, x)
+        @mark four begin
+            push!(ret, 4)
+        end
+        push!(ret, 5)
+        ret
+    end
+
+    @test outer() == 1:5
+    @test @skip(four, outer(), recursive=true) == [1,2,3,5]
+    @test @skip(four, outer(), recursive=false) == [1,2,3,5]
+    @test @skip(three, outer(), recursive=true) == [1,2,4,5]
+    @test @skip(three, outer(), recursive=false) == 1:5
+    @test @skip([three, four], outer()) == [1,2,5]
+    @test @skip([three, four], outer(), recursive=false) == [1,2,3,5]
+end
+
 using Documenter
 DocMeta.setdocmeta!(OptionalArgChecks, :DocTestSetup, :(using OptionalArgChecks); recursive=true)
 doctest(OptionalArgChecks; manual = false)
