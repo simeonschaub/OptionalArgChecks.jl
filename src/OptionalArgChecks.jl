@@ -44,11 +44,11 @@ macro mark(label, ex)
     )
 end
 
-struct Skip{labels}
-    Skip(labels::Symbol...) = new{labels}()
+struct Skip{labels,recursive}
+    Skip(labels::Symbol...; recursive=true) = new{labels,recursive}()
 end
 
-@dynamo function (::Skip{labels})(x...) where {labels}
+@dynamo function (::Skip{labels,recursive})(x...) where {labels,recursive}
     ir = IR(x...)
     ir === nothing && return
 
@@ -89,18 +89,11 @@ end
 
     @assert isempty(tape)
 
-    recurse!(ir)
+    recursive && recurse!(ir)
     return ir
 end
 
-"""
-    @skip label ex
-    @skip [label1, label2, ...] ex
-
-For every function call in `ex`, expressions marked with label `label` (or any of the labels
-`label*` respectively) using the macro [`@mark`](@ref) get omitted recursively.
-"""
-macro skip(l, ex)
+function _skip(l, ex, recursive=true)
     if l isa Symbol
         labels = [l]
     elseif Meta.isexpr(l, :vect)
@@ -114,12 +107,38 @@ macro skip(l, ex)
             pushfirst!(x.args, Expr(
                 :call,
                 GlobalRef(@__MODULE__, :Skip),
+                Expr(:parameters, Expr(:kw, :recursive, recursive)),
                 Expr.(:quote, labels)...
             ))
         end
         return x
     end
     return esc(ex)
+end
+
+"""
+    @skip label ex[[ recursive=true]]
+    @skip [label1, label2, ...] ex[[ recursive=true]]
+
+For every function call in `ex`, expressions marked with label `label` (or any of the labels
+`label*` respectively) using the macro [`@mark`](@ref) get omitted recursively.
+"""
+macro skip end
+
+macro skip(l, ex)
+    return _skip(l, ex)
+end
+
+macro skip(l, ex, r)
+    Meta.isexpr(r, :(=)) || error("expected keyword argument instead of `$r`")
+
+    argname = r.args[1]
+    argname == :recursive || error("unknown kewyword argument `$argname`")
+
+    recursive = r.args[2]
+    recursive isa Bool || error("keyword argument `recursive` has to be a `Bool` literal")
+
+    return _skip(l, ex, recursive)
 end
 
 """
