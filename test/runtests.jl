@@ -42,6 +42,8 @@ end
     @test @skip(does_not_exist, simple()) === 1
     @test @skip(return1, simple()) === 2
 
+    @test_throws LoadError eval(:(@skip(2 + 3, simple())))
+
     function indirect()
         simple()
     end
