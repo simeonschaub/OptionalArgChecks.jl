@@ -3,10 +3,10 @@ module OptionalArgChecks
 using IRTools: @dynamo, IR, recurse!, block, branches, branch!
 using MacroTools: postwalk
 
-export @mark, @skip, @skipargcheck
+export @mark, @skip, @unsafe_skipargcheck
 
 # reexport @argcheck and @check
-using ArgCheck: @argcheck, @check
+using ArgCheck: @argcheck, @check, ArgCheck
 export @argcheck, @check
 
 """
@@ -97,7 +97,7 @@ function _skip(l, ex, recursive=true)
     if l isa Symbol
         labels = [l]
     elseif Meta.isexpr(l, :vect)
-        labels::Vector{Symbol} = l.args
+        labels::Vector = l.args
     else
         error("label has to be a name or array of names")
     end
@@ -142,13 +142,12 @@ macro skip(l, ex, r)
 end
 
 """
-    @skipargcheck ex
+    @usafe_skipargcheck ex
 
-Elides argument checks created with [`@argcheck`](@ref) or [`@check`](@ref), provided by the
-package `ArgCheck.jl`. Is equivalent to `@skip argcheck ex`.
+Elides argument checks created with [`@argcheck`](@ref) or [`@check`](@ref), provided by the package `ArgCheck.jl`.
 """
-macro skipargcheck(ex)
-    return :(@skip argcheck $(esc(ex)))
+macro unsafe_skipargcheck(ex)
+    return :(@skip $(ArgCheck.LABEL_ARGCHECK) $(esc(ex)))
 end
 
 end

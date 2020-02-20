@@ -12,21 +12,21 @@ using OptionalArgChecks
     end
 
     for x in 0:2
-        @test @skipargcheck f(x) == x + 3
+        @test @skip argcheck f(x) == x + 3
     end
 
     g(x) = @argcheck x > 0
 
     @test_throws ArgumentError g(-1)
-    @test @skipargcheck(g(-1)) === nothing
-    @test @skip(argcheck, g(-1)) === nothing
+    @test @unsafe_skipargcheck(g(-1)) === nothing
+    @test_throws ArgumentError @skip(argcheck, g(-1)) === nothing
     @test g(1) === nothing
 
     g(x) = @check x > 0
 
     @test_throws Exception g(-1)
-    @test @skipargcheck(g(-1)) === nothing
-    @test @skip(argcheck, g(-1)) === nothing
+    @test @unsafe_skipargcheck(g(-1)) === nothing
+    @test_throws Exception @skip(argcheck, g(-1)) === nothing
     @test g(1) === nothing
 end
 
