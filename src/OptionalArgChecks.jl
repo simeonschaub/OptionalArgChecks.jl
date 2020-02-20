@@ -6,7 +6,7 @@ using MacroTools: postwalk
 export @mark, @skip, @unsafe_skipargcheck
 
 # reexport @argcheck and @check
-using ArgCheck: @argcheck, @check, ArgCheck
+using ArgCheck: @argcheck, @check, LABEL_ARGCHECK
 export @argcheck, @check
 
 """
@@ -101,7 +101,7 @@ function _skip(l, ex, recursive=true)
     else
         error("label has to be a name or array of names")
     end
-    _skip(labels, ex, recursive)
+    return _skip(labels, ex, recursive)
 end
 
 function _skip(labels::Vector, ex, recursive)
@@ -129,29 +129,36 @@ For every function call in `ex`, expressions marked with label `label` (or any o
 macro skip end
 
 macro skip(l, ex)
-    return _skip(l, ex)
+    return _skip(l, ex, true)
 end
 
 macro skip(l, ex, r)
-    Meta.isexpr(r, :(=)) || error("expected keyword argument instead of `$r`")
+    r = parse_recursive(r)
+    return _skip(l, ex, r)
+end
 
+function parse_recursive(r)::Bool
+    Meta.isexpr(r, :(=)) || error("expected keyword argument instead of `$r`")
     argname = r.args[1]
     argname == :recursive || error("unknown kewyword argument `$argname`")
-
     recursive = r.args[2]
     recursive isa Bool || error("keyword argument `recursive` has to be a `Bool` literal")
-
-    return _skip(l, ex, recursive)
+    return recursive
 end
 
 """
-    @unsafe_skipargcheck ex
+    @unsafe_skipargcheck ex[[ recursive=true]]
 
-Elides argument checks created with [`@argcheck`](@ref) or [`@check`](@ref), provided by the package `ArgCheck.jl`.
+Elides argument checks created with [`@argcheck`](@ref) or [`@check`](@ref),
+provided by the package `ArgCheck.jl`.
 """
 macro unsafe_skipargcheck(ex)
-    l = ArgCheck.LABEL_ARGCHECK
-    _skip([l], ex, true)
+    return _skip([LABEL_ARGCHECK], ex, true)
+end
+
+macro unsafe_skipargcheck(ex, r)
+    r = parse_recursive(r)
+    return _skip([LABEL_ARGCHECK], ex, r)
 end
 
 end

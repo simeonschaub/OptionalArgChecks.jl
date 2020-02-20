@@ -1,7 +1,7 @@
 name = "OptionalArgChecks"
 uuid = "dfbeeb84-381a-44da-9ec9-a723abf299c7"
 authors = ["Simeon Schaub"]
-version = "0.2.2"
+version = "0.3.0"
 
 [deps]
 ArgCheck = "dce04be8-c92d-5529-be00-80e4d2c0e197"
@@ -9,7 +9,7 @@ IRTools = "7869d1d1-7146-5819-86e3-90919afe41df"
 MacroTools = "1914dd2f-81c6-5fcd-8719-6d5c9610ff09"
 
 [compat]
-ArgCheck = "1.1"
+ArgCheck = "2"
 IRTools = "0.3"
 MacroTools = "0.5"
 julia = "1"
