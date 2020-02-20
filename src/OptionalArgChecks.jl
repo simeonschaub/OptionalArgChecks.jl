@@ -45,7 +45,7 @@ macro mark(label, ex)
 end
 
 struct Skip{labels,recursive}
-    Skip(labels::Symbol...; recursive=true) = new{labels,recursive}()
+    Skip(labels...; recursive=true) = new{labels,recursive}()
 end
 
 @dynamo function (::Skip{labels,recursive})(x...) where {labels,recursive}
@@ -94,14 +94,17 @@ end
 end
 
 function _skip(l, ex, recursive=true)
-    if l isa Symbol
-        labels = [l]
+    labels::Vector{Symbol} = if l isa Symbol
+        [l]
     elseif Meta.isexpr(l, :vect)
-        labels::Vector = l.args
+        labels = l.args
     else
         error("label has to be a name or array of names")
     end
+    _skip(labels, ex, recursive)
+end
 
+function _skip(labels::Vector, ex, recursive)
     ex = postwalk(ex) do x
         if Meta.isexpr(x, :call)
             pushfirst!(x.args, Expr(
@@ -129,6 +132,10 @@ macro skip(l, ex)
     return _skip(l, ex)
 end
 
+function resolve_labels(l)::Vector
+
+end
+
 macro skip(l, ex, r)
     Meta.isexpr(r, :(=)) || error("expected keyword argument instead of `$r`")
 
@@ -142,12 +149,13 @@ macro skip(l, ex, r)
 end
 
 """
-    @usafe_skipargcheck ex
+    @unsafe_skipargcheck ex
 
 Elides argument checks created with [`@argcheck`](@ref) or [`@check`](@ref), provided by the package `ArgCheck.jl`.
 """
 macro unsafe_skipargcheck(ex)
-    return :(@skip $(ArgCheck.LABEL_ARGCHECK) $(esc(ex)))
+    l = ArgCheck.LABEL_ARGCHECK
+    _skip([l], ex, true)
 end
 
 end
