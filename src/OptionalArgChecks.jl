@@ -132,10 +132,6 @@ macro skip(l, ex)
     return _skip(l, ex)
 end
 
-function resolve_labels(l)::Vector
-
-end
-
 macro skip(l, ex, r)
     Meta.isexpr(r, :(=)) || error("expected keyword argument instead of `$r`")
 
