@@ -28,6 +28,18 @@ using OptionalArgChecks
     @test @unsafe_skipargcheck(g(-1)) === nothing
     @test_throws Exception @skip(argcheck, g(-1)) === nothing
     @test g(1) === nothing
+
+    outer(x) = inner(x)
+    inner(x) = (@argcheck x; return x)
+    @test @unsafe_skipargcheck(inner(true)) == true
+    @test @unsafe_skipargcheck(inner(false)) == false
+    @test @unsafe_skipargcheck(inner(false), recursive=true) == false
+    @test @unsafe_skipargcheck(inner(false), recursive=false) == false
+
+    @test @unsafe_skipargcheck(outer(true)) == true
+    @test @unsafe_skipargcheck(outer(false)) == false
+    @test @unsafe_skipargcheck(outer(false), recursive=true) == false
+    @test_throws ArgumentError @unsafe_skipargcheck(outer(false), recursive=false)
 end
 
 @testset "mark skip" begin
