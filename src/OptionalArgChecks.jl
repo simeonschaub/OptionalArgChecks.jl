@@ -6,8 +6,21 @@ using MacroTools: postwalk
 export @mark, @skip, @unsafe_skipargcheck
 
 # reexport @argcheck and @check
-using ArgCheck: @argcheck, @check, LABEL_ARGCHECK
+using ArgCheck: @argcheck, @check, LABEL_ARGCHECK, ArgCheck
+export LABEL_ARGCHECK
 export @argcheck, @check
+
+function eval_label(label)
+    try
+        return Main.eval(label)
+    catch err
+        msg = """Cannot evaluate $label
+        Labels are evaluated globally in the `Main` module.
+        """
+        @error msg
+        rethrow(err)
+    end
+end
 
 """
     @mark label ex
@@ -17,7 +30,7 @@ Marks `ex` as an optional argument check, so when a function is called via
 
 ```jldoctest
 julia> function half(x::Integer)
-           @mark check_even iseven(x) || throw(DomainError(x, "x has to be an even number"))
+           @mark :check_even iseven(x) || throw(DomainError(x, "x has to be an even number"))
            return x ÷ 2
        end
 half (generic function with 1 method)
@@ -30,12 +43,12 @@ ERROR: DomainError with 3:
 x has to be an even number
 [...]
 
-julia> @skip check_even half(3)
+julia> @skip :check_even half(3)
 1
 ```
 """
 macro mark(label, ex)
-    label isa Symbol || error("label has to be a Symbol")
+    label = eval_label(label)
     return Expr(
         :block,
         Expr(:meta, :begin_optional, label),
@@ -94,17 +107,10 @@ end
 end
 
 function _skip(l, ex, recursive=true)
-    labels::Vector{Symbol} = if l isa Symbol
-        [l]
-    elseif Meta.isexpr(l, :vect)
-        labels = l.args
-    else
-        error("label has to be a name or array of names")
-    end
-    return _skip(labels, ex, recursive)
+    return _skip([l], ex, recursive)
 end
 
-function _skip(labels::Vector, ex, recursive)
+function _skip(labels::AbstractVector, ex, recursive)
     ex = postwalk(ex) do x
         if Meta.isexpr(x, :call)
             pushfirst!(x.args, Expr(
@@ -129,10 +135,12 @@ For every function call in `ex`, expressions marked with label `label` (or any o
 macro skip end
 
 macro skip(l, ex)
+    l = eval_label(l)
     return _skip(l, ex, true)
 end
 
 macro skip(l, ex, r)
+    l = eval_label(l)
     r = parse_recursive(r)
     return _skip(l, ex, r)
 end
