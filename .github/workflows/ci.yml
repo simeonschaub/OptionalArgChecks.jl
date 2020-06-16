@@ -34,7 +34,7 @@ jobs:
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     # don't run ci twice on my own PRs
-    if: ${{ !(github.event_name == 'pull_request' && github.repository_owner == 'simeonschaub') }}
+    if: ${{ !(github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) }}
 
   docs:
     name: Documentation
@@ -53,4 +53,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
     # don't run ci twice on my own PRs
-    if: ${{ !(github.event_name == 'pull_request' && github.repository_owner == 'simeonschaub') }}
+    if: ${{ !(github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) }}
